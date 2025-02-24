@@ -1,0 +1,56 @@
+Practica 2: Instalar un servidor de correos
+
+1 Instalar el servidor de correos
+sudo dnf install postfix
+
+2 Iniciar el servidor
+sudo systemctl start postfix
+sudo systemctl enable postfix
+
+3 Habilitar el servicio smtp y smtps y habilitar el puerto 587
+firewall-cmd --add-service=smtp --permanent
+firewall-cmd --add-service=smtps --permanent
+firewall-cmd --add-port=587/tcp --permanent
+
+4 Editar el archivo de configuracion de postfix
+sudo nano /etc/postfix/main.cf
+
+- Descomentar la linea myorigin = $myhostname
+
+- Comentar la linea inet_interfaces = localhost
+- descomentar la linea inet_interfaces = all
+
+- Comentar la linea mydestination = $myhostname, localhost.$mydomain, localhost
+- Descomentar la 2da linea mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+
+- Descomentar la linea mynetworks y anadir la red que tiene nuestra maquina:
+mynetworks = 192.168.1.0/24, 127.0.0.0/8 
+
+5 Al final del archivo, agregar las siguientes lineas:
+relayhost = [smtp.gmail.com]:587
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+
+-Guardar configuraciones.
+
+6 Editar o crear el archivo sasl_passwd en el siguiente ditectorio:
+sudo nano /etc/postfix/sasl_passwd
+
+- En el archivo anadir lo siguiente:
+[smtp.gmail.com]:587 ejemplo@gmail.com:seguido de la contrasena de aplicacion
+
+-guardar configuraciones
+
+7 Asignar los permisos necesarios al archivo sasl_passwd
+chmod 600 /etc/postfix/sasl_passwd
+chown root:root /etc/postfix/sasl_passwd
+
+8 Crear el archivo hash con el siguiente comando
+postmap /etc/postfix/sasl_passwd
+
+9 Reiniciar el servicio:
+sudo systemctl restart postfix
+
+10 Enviar correo:
+echo "Mensaje a enviar" | mail -s "asunto" correo destinatario

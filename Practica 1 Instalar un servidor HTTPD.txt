@@ -1,0 +1,66 @@
+Practica 1: Instalar un servidor HTTP apache2
+
+*Crear un website estatico html con la frase "Hola Mundo"	
+
+1- Instalar httpd (apache2)
+sudo dnf install httpd
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+2- Crear archivo index.html
+cd /var/www/html
+sudo vi index.html 
+-una vex en el archivo, agregar <h1>Hola mundo</h1>
+
+- Guardar y salir.
+
+*Crear un host virtual y ponerlo a escuchar por el puerto 80 y que al ingresar acceda al website anterior.
+
+
+1- ir hacia el archivo httpd.conf
+cd /etc/httpd/conf
+sudo vi httpd.conf
+
+- En el archivo, agregar los siguientes parametros:
+<VirtualHost *:80>
+DocumentRoot "/var/www/html"
+</VirtualHost>
+
+- guardar y salir.
+- Reiniciar servicio
+sudo systemctl restart httpd
+- verificar en el navegador, escribiendo localhost:80
+
+*Crear un website estatico html con su nombre, matricula y nombre de la materia.
+
+cd /var/www/html
+- crear carpeta que guardara otro archivo index.html (opcional)
+sudo mkdir nombre de carpeta
+
+- crear archivo index.html
+sudo vi index.html
+
+- Dentro del archivo, agregar lo siguiente:
+<h1> "nombre" "matricula" </h1>
+
+- guardar y salir.
+
+*Crear un host virtual y ponerlo a escuchar por el puerto 8080 y que al ingresar acceda al website anterior.
+
+cd /etc/httpd/conf
+sudo vi httpd.conf
+
+- Al final del archivo, agregar lo siguiente:
+ 
+<VirtualHost *:8080>
+DocumentRoot "/var/www/html/matricula"
+</VirtualHost>
+
+- Ir al parametron Listen y ponerlo a que escuche en el puerto 8080
+- Ir al parametron DocumentRoot y agregarle la ruta que contiene el archivo:
+DocumentRoot "/var/www/html/matricula"
+
+-Reiniciar servicio httpd
+sudo systemctl restart httpd
+
+- En el navegador, poner localhost:8080
