@@ -64,3 +64,57 @@ DocumentRoot "/var/www/html/matricula"
 sudo systemctl restart httpd
 
 - En el navegador, poner localhost:8080
+
+***********************************************************************
+
+AGREGAR 2 VIRTUAL HOST PARA OFRECER 2 WEB STATICAS EN EL MISMO SERVIDOR HTTPD
+
+1- CREAR LOS DIRECTORIOS Y ARCHIVOS HTML:
+sudo mkdir -p /var/www/html/sitio80
+sudo mkdir -p /var/www/html/sitio8080
+
+- CREAR UN ARCHIVO DE PRUEBA PARA CADA SITIO WEB:
+echo "<h1>Sitio desde puerto 80</h1>" | sudo tee /var/www/html/sitio80/index.html
+echo "<h1>Sitio desde puerto 8080</h1>" | sudo tee /var/www/html/sitio8080/index.html
+
+2- CREAR LOS ARCHIVOS DE CONFIGURACION VIRTUAL HOST PARA CADA SITIO WEB:
+-VIRTUALHOST PARA EL PUERTO 80:
+sudo nano /etc/httpd/conf.d/sitio80.conf
+
+- agregar el siguiente contenido al archivo:
+Listen 80
+<VirtualHost *:80>
+    ServerName localhost
+    DocumentRoot "/var/www/html/sitio80"
+    <Directory "/var/www/html/sitio80">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+-VIRTUALHOST PARA EL PUERTO 8080:
+sudo nano /etc/httpd/conf.d/sitio8080.conf
+
+- agregar el siguiente contenido:
+Listen 8080
+
+<VirtualHost *:8080>
+    ServerName localhost
+    DocumentRoot "/var/www/html/sitio8080"
+    <Directory "/var/www/html/sitio8080">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+Nota: El Listen 8080 solo se necesita una vez en cualquier archivo de configuración. Si ya existe en otro lado, no lo repitas.
+
+3- ABRIR LOS PUERTOS EN EL FIREWALL
+sudo firewall-cmd --permanent --add-port=8080/tcp
+sudo firewall-cmd --reload
+
+4- REINICIAR APAHCE:
+sudo systemctl restart httpd
+
+5- VERIFICAR ESTATUS:
+sudo systemctl status httpd
