@@ -118,3 +118,153 @@ sudo systemctl restart httpd
 
 5- VERIFICAR ESTATUS:
 sudo systemctl status httpd
+
+#################################################################33333
+INSTALAR WORDPRESS
+**************************************************
+Upgrade system packages¶
+Ensure your system's packages are up-to-date:
+
+
+    sudo dnf upgrade -y
+Install Apache¶
+Apache is a web server that will serve your WordPress site. Install it with the following:
+
+
+    sudo dnf install httpd -y
+Enable Apache to start on boot¶
+After installing Apache, enable it so it starts automatically on boot:
+
+
+    sudo systemctl enable --now httpd
+Install MariaDB¶
+WordPress stores dynamic content in a MySQL database. MariaDB is an open source fork of MySQL. Install it with the following:
+
+
+    sudo dnf install mariadb-server -y
+Enable MariaDB server¶
+After installing MariaDB, enable it so it starts automatically on boot:
+
+
+    sudo systemctl enable --now mariadb
+Secure MariaDB¶
+Run the mysql_secure_installation script:
+
+
+    sudo mysql_secure_installation --use-default
+This script performs the following:
+
+Sets a root password if one is not already set
+
+Removes anonymous users
+
+Disallows remote root login
+
+Removes access to the test database
+
+Reloads privileges
+
+Install PHP¶
+PHP is the programming used to interact with the MySQL database and perform dynamic actions. It is heavily used in WordPress core, themes, and plugins.
+
+Install PHP and necessary packages to connect to MySQL:
+
+
+    sudo dnf install php php-mysqlnd php-gd php-xml php-mbstring
+After installing PHP, you must reload Apache to install it as an Apache module and read its configuration files:
+
+Restart Apache¶
+
+    sudo systemctl restart httpd
+Fetch and unpack WordPress¶
+Use curl do download the latest version of WordPress:
+
+
+    curl -O https://wordpress.org/latest.tar.gz
+Use tar to extract the downloaded archive:
+
+
+    tar -xzvf latest.tar.gz
+Copy the WordPress files to Apache's default public directory:
+
+
+   sudo cp -r wordpress/* /var/www/html 
+Set owner¶
+Make Apache the owner of the files:
+
+
+    sudo chown -R apache:apache /var/www/html/
+Set permissions for the WordPress files:
+
+Set permissions¶
+
+    sudo chmod -R 755 /var/www/html/
+Login to the MySQL cli:
+
+Configure database¶
+
+    sudo mysql -u root -p
+Create a new database for your WordPress website:
+
+Create a new database¶
+
+    CREATE DATABASE LOCALDEVELOPMENTENV;
+Create a user with a password for your database:
+
+Note
+
+It is highly recommended to use a stronger password.
+
+Create a new user and password¶
+
+    CREATE USER 'admin'@'localhost' IDENTIFIED BY 'password';
+Grant all privileges to your WordPress database to the user you just created:
+
+
+    GRANT ALL PRIVILEGES ON LOCALDEVELOPMENTENV.* TO 'admin'@'localhost';
+Flush privileges to ensure the application of changes:
+
+
+    FLUSH PRIVILEGES;
+Exit the MySQL cli:
+
+
+    EXIT;
+Configure WordPress¶
+Copy the wp-config-sample.php template and rename it:
+
+
+    sudo cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+Open the wp-config.php file with your choice of text editor:
+
+
+    sudo vi /var/www/html/wp-config.php
+Replace database settings¶
+You must define the following constants in your wp-config.php file:
+
+
+    define ('DB_NAME', 'LOCALDEVELOPMENTENV');
+    define ('DB_USER', 'admin');
+    define ('DB_PASSWORD', 'password');
+Configure firewall¶
+Open up HTTP and HTTPS services in your firewall:
+
+
+    sudo firewall-cmd --add-service=http --add-service=https
+Reload firewalld to ensure changes to take effect:
+
+
+    sudo systemctl reload firewalld
+SELinux settings¶
+To allow Apache read and write access to your WordPress files, run this command:
+
+
+   chcon -R -t httpd_sys_rw_content_t /var/www/html/ 
+To allow Apache to make network connections, run this command:
+
+Note
+
+The -P flag makes this configuration persistent across reboots
+
+
+    setsebool -P httpd_can_network_connect true
