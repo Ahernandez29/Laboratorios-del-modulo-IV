@@ -54,3 +54,96 @@ sudo systemctl restart postfix
 
 10 Enviar correo:
 echo "Mensaje a enviar" | mail -s "asunto" correo destinatario
+
+********************************************************************************
+
+Practica 3: Instalar un servidor de Impresion (1pts)
+
+   Instala un servidor de impresiones CUPS ("Common UNIX Printing System")
+   Instala una IMpresora virtual (PDF) y configurala con CUPS
+   En su PC cliente, instale la Impresora usando la IP del servidor
+   Realize una prueba imprimiento un documento de WORD, el mismo debe de salir impreso (en PDF) en nuestra impresora virtual
+**************************************************************************************
+
+1- Instalar el servidor de impression CUPS:
+
+sudo dnf install cups cups-pdf -y
+
+2- Habilitar e iniciar el servicio CUPS:
+
+sudo systemctl enable --now cups
+
+3- Abrir puertos en el firewall
+CUPS usa el puerto 631 (IPP), habilítalo en tu firewall:
+
+sudo firewall-cmd --permanent --add-service=ipp
+sudo firewall-cmd --permanent --add-port=631/tcp
+sudo firewall-cmd --reload
+
+4: Configuración del servidor CUPS
+Edita el archivo principal de configuración:
+
+sudo vim /etc/cups/cupsd.conf
+
+Modifica o agrega las siguientes líneas:
+Port 631
+Listen /run/cups/cups.sock
+
+WebInterface Yes
+
+<Location />
+  Order allow,deny
+  Allow @LOCAL
+</Location>
+
+<Location /admin>
+  Order allow,deny
+  Allow @LOCAL
+</Location>
+
+<Location /admin/conf>
+  AuthType Default
+  Require user @SYSTEM
+  Order allow,deny
+  Allow @LOCAL
+</Location>
+
+-Guarda los cambios y reinicia CUPS:
+
+sudo systemctl restart cups
+
+ 5- Agregar la impresora virtual PDF desde CUPS web
+Abre en el navegador web del servidor o de otro equipo conectado en la misma red:
+
+localhost:631
+
+Ve a la pestaña Administration, luego Add Printer.
+Inicia sesión con usuario y contraseña del servidor (usuario administrador).
+Selecciona CUPS-PDF (Virtual PDF Printer) y continúa.
+Configura los detalles:
+Nombre: Virtual_PDF
+Descripción: Impresora virtual PDF
+Ubicación: Servidor Rocky Linux
+Selecciona fabricante: Generic → Generic CUPS-PDF Printer.
+Guarda los cambios.
+La impresora quedará configurada con el nombre Virtual_PDF.
+
+7- Instalar la impresora desde el cliente (Windows)
+Desde el PC cliente Windows realiza lo siguiente:
+
+Ve a Panel de control → Hardware y sonido → Dispositivos e impresoras → Agregar una impresora.
+
+Elige "La impresora que deseo no está en la lista".
+
+Selecciona "Agregar una impresora usando dirección TCP/IP o nombre de host".
+
+Especifica la IP del servidor y puerto:
+IP: 192.168.1.100
+Puerto: 631
+
+Se buscará automáticamente. Si no se detecta, elige manualmente el tipo de dispositivo "Personalizado" y luego en "Configuración" selecciona el protocolo IPP con la siguiente URL:
+
+http://192.168.1.100:631/printers/Virtual_PDF
+Para el driver, selecciona Generic → MS Publisher Imagesetter (u otro driver genérico).
+
+Completa la instalación. Ahora tu PC cliente ya tiene la impresora conectada al servidor Rocky Linux.
